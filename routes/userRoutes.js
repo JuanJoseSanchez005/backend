@@ -7,20 +7,21 @@ const {
   actualizarUsuario,
   eliminarUsuario
 } = require('../controllers/userController');
+const { proteger, autorizar } = require('../middleware/auth');
 
-// GET - Obtener todos los usuarios
+// GET - Obtener todos los usuarios (Pública)
 router.get('/', obtenerUsuarios);
 
-// GET - Obtener un usuario por ID
-router.get('/:id', obtenerUsuarioPorId);
+// GET - Obtener un usuario por ID (Protegida)
+router.get('/:id', proteger, obtenerUsuarioPorId);
 
-// POST - Crear un nuevo usuario
-router.post('/', crearUsuario);
+// POST - Crear un nuevo usuario (Protegida + Solo Admin)
+router.post('/', proteger, autorizar('admin'), crearUsuario);
 
-// PUT - Actualizar un usuario
-router.put('/:id', actualizarUsuario);
+// PUT - Actualizar un usuario (Protegida)
+router.put('/:id', proteger, actualizarUsuario);
 
-// DELETE - Eliminar un usuario
-router.delete('/:id', eliminarUsuario);
+// DELETE - Eliminar un usuario (Protegida + Solo Admin)
+router.delete('/:id', proteger, autorizar('admin'), eliminarUsuario);
 
 module.exports = router;

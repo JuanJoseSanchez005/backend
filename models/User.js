@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   nombre: {
@@ -15,6 +16,13 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+  },
+  
+  password: {
+    type: String,
+    required: [true, 'La contraseña es requerida'],
+    minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
+    select: false
   },
   
   edad: {
@@ -49,5 +57,21 @@ const userSchema = new mongoose.Schema({
     default: 'usuario'
   }
 }, { timestamps: true });
+
+// HOOK: se ejecuta ANTES de guardar (pre 'save')
+userSchema.pre('save', async function () {
+  // Solo hashear si la contraseña fue modificada
+  if (!this.isModified('password')) {
+    return;
+  }
+  // Generar el salt y hashear
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// MÉTODO: comparar contraseña en el login
+userSchema.methods.compararPassword = async function (passwordIngresada) {
+  return await bcrypt.compare(passwordIngresada, this.password);
+};
 
 module.exports = mongoose.model('User', userSchema);
